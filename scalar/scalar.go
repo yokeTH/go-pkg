@@ -3,15 +3,16 @@ package scalar
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 const (
-	docsPath = "./docs/swagger.json"
+	docsPathJson = "./docs/swagger.json"
 )
 
-var DefaultHandler = new(docsPath)
+var DefaultHandler = new(docsPathJson)
 
 func Handler(path string) fiber.Handler {
 	return new(path)
@@ -19,15 +20,20 @@ func Handler(path string) fiber.Handler {
 
 func new(docsPath string) fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
-		var rawSpec []byte
 		_, err := os.Stat(docsPath)
 		if os.IsNotExist(err) {
 			return fmt.Errorf("%s file does not exist", docsPath)
 		}
-		rawSpec, err = os.ReadFile(docsPath)
+
+		rawSpec, err := os.ReadFile(docsPath)
 		if err != nil {
 			return fmt.Errorf("Failed to read provided Swagger file (%s): %v", docsPath, err.Error())
 		}
+
+		if strings.HasSuffix(ctx.Path(), "docs.json") {
+			return ctx.Type("json").Send(rawSpec)
+		}
+
 		return ctx.Type("html").SendString(getHtmlByContent(string(rawSpec)))
 	}
 }
