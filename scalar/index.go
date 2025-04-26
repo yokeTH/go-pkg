@@ -1,17 +1,21 @@
 package scalar
 
-import "fmt"
-
-func getHtmlByContent(content string) string {
-	return fmt.Sprintf(`
+const templeteHTML = `
 	<!doctype html>
 <html>
   <head>
-    <title>Scalar API Reference</title>
+    <title>{{.Title}}</title>
     <meta charset="utf-8" />
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1" />
+      	{{- if .CustomStyle}}
+       	<style>
+       	:root {
+       	{{ .CustomStyle }}
+       	}
+		</style>
+        {{end}}
   </head>
 
   <body>
@@ -23,12 +27,12 @@ func getHtmlByContent(content string) string {
     <!-- Initialize the Scalar API Reference -->
     <script>
       Scalar.createApiReference('#app', {
-        // The URL of the OpenAPI/Swagger document
-        content: %q,
+        // The content of the OpenAPI/Swagger document
+        content: {{.DocsJsonContent}},
+
         // Avoid CORS issues
-        proxyUrl: 'https://proxy.scalar.com',
+        proxyUrl: {{.ProxyUrl}},
       })
     </script>
   </body>
-</html>`, content)
-}
+</html>`

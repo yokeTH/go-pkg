@@ -2,38 +2,46 @@ package scalar
 
 import (
 	"fmt"
+	"html/template"
 	"os"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-const (
-	docsPathJson = "./docs/swagger.json"
-)
+var DefaultHandler = New()
 
-var DefaultHandler = new(docsPathJson)
+func New(config ...Config) fiber.Handler {
+	var cfg Config = defaultConfig
+	if len(config) > 1 {
+		cfg = loadDefaultConfig(config[0])
+	}
 
-func Handler(path string) fiber.Handler {
-	return new(path)
-}
-
-func new(docsPath string) fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
-		_, err := os.Stat(docsPath)
-		if os.IsNotExist(err) {
-			return fmt.Errorf("%s file does not exist", docsPath)
+		if cfg.DocsJsonContent == "" {
+			_, err := os.Stat(cfg.DocsJsonPath)
+			if os.IsNotExist(err) {
+				return fmt.Errorf("%s file does not exist", cfg.DocsJsonPath)
+			}
+
+			rawSpec, err := os.ReadFile(cfg.DocsJsonPath)
+			if err != nil {
+				return fmt.Errorf("Failed to read provided Swagger file (%s): %v", cfg.DocsJsonPath, err.Error())
+			}
+
+			cfg.DocsJsonContent = string(rawSpec)
 		}
 
-		rawSpec, err := os.ReadFile(docsPath)
+		html, err := template.New("index.html").Parse(templeteHTML)
 		if err != nil {
-			return fmt.Errorf("Failed to read provided Swagger file (%s): %v", docsPath, err.Error())
+			return fmt.Errorf("Failed to parse html template:%v", err)
 		}
 
-		if strings.HasSuffix(ctx.Path(), "docs.json") {
-			return ctx.Type("json").Send(rawSpec)
+		if strings.HasSuffix(ctx.Path(), cfg.DocsJsonUrl) {
+			return ctx.Type("json").SendString(cfg.DocsJsonContent)
 		}
 
-		return ctx.Type("html").SendString(getHtmlByContent(string(rawSpec)))
+		ctx.Type("html")
+		return html.Execute(ctx, cfg)
 	}
 }
