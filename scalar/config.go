@@ -12,6 +12,7 @@ type Config struct {
 	DocsJsonContent string
 
 	// Url of json content
+	// example: app.Get("/swagger/*", scalar.HandlerDefault) -> /swagger/doc.json will serve the json of openAPI
 	// default: "doc.json"
 	DocsJsonUrl string
 
