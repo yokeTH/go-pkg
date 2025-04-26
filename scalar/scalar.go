@@ -16,25 +16,31 @@ func New(config ...Config) fiber.Handler {
 	if len(config) > 1 {
 		cfg = loadDefaultConfig(config[0])
 	}
+	var (
+		setupErr error
+	)
 
-	return func(ctx *fiber.Ctx) error {
-		if cfg.DocsJsonContent == "" {
-			_, err := os.Stat(cfg.DocsJsonPath)
-			if os.IsNotExist(err) {
-				return fmt.Errorf("%s file does not exist", cfg.DocsJsonPath)
-			}
+	html, err := template.New("index.html").Parse(templeteHTML)
+	if err != nil {
+		setupErr = fmt.Errorf("Failed to parse html template:%v", err)
+	}
 
-			rawSpec, err := os.ReadFile(cfg.DocsJsonPath)
-			if err != nil {
-				return fmt.Errorf("Failed to read provided Swagger file (%s): %v", cfg.DocsJsonPath, err.Error())
-			}
-
-			cfg.DocsJsonContent = string(rawSpec)
+	if cfg.DocsJsonContent == "" {
+		_, err = os.Stat(cfg.DocsJsonPath)
+		if os.IsNotExist(err) {
+			setupErr = fmt.Errorf("%s file does not exist", cfg.DocsJsonPath)
 		}
 
-		html, err := template.New("index.html").Parse(templeteHTML)
+		rawSpec, err := os.ReadFile(cfg.DocsJsonPath)
 		if err != nil {
-			return fmt.Errorf("Failed to parse html template:%v", err)
+			setupErr = fmt.Errorf("Failed to read provided Swagger file (%s): %v", cfg.DocsJsonPath, err.Error())
+		}
+		cfg.DocsJsonContent = string(rawSpec)
+	}
+
+	return func(ctx *fiber.Ctx) error {
+		if setupErr != nil {
+			return setupErr
 		}
 
 		if strings.HasSuffix(ctx.Path(), cfg.DocsJsonUrl) {
