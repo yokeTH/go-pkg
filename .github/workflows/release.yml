@@ -9,6 +9,9 @@ on:
 
 jobs:
   draft_release:
+    permissions:
+      contents: write
+      pull-requests: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
