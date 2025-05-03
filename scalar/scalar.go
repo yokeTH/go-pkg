@@ -86,7 +86,7 @@ func New(config ...Config) fiber.Handler {
 		}
 
 		if ctx.Path() == specURL {
-			return ctx.SendString(rawSpec)
+			return ctx.JSON(rawSpec)
 		}
 
 		if !(ctx.Path() == scalarUIPath || ctx.Path() == specURL) {
