@@ -6,15 +6,18 @@
 version: 2
 updates:
   - package-ecosystem: "gomod"
-    directory: "**/*"
+    open-pull-requests-limit: 15
+    directories:
+      - "**/*"
     labels:
       - "🤖 Dependencies"
     schedule:
       interval: "daily"
 
   - package-ecosystem: "github-actions"
+    open-pull-requests-limit: 15
     directory: "/"
-    schedule:
-      interval: daily
     labels:
       - "🤖 Dependencies"
+    schedule:
+      interval: "daily"
