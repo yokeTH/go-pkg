@@ -1,6 +1,7 @@
 package scalar
 
 import (
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -10,6 +11,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"gopkg.in/yaml.v2"
 )
+
+//go:embed scalar.min.js
+var embeddedJS []byte
 
 func New(config ...Config) fiber.Handler {
 	// Set default config
@@ -86,12 +90,7 @@ func New(config ...Config) fiber.Handler {
 		// fallback js
 		jsPath := path.Join(cfg.BasePath, "js/api-reference.min.js")
 		if ctx.Path() == jsPath {
-			scalarJS := "./scalar.min.js"
-			if _, err := os.Stat(scalarJS); os.IsNotExist(err) {
-				return ctx.Status(fiber.StatusNotFound).
-					SendString("Scalar JS file not found")
-			}
-			return ctx.SendFile(scalarJS)
+			return ctx.Send(embeddedJS)
 		}
 
 		if cfg.CacheAge > 0 {
