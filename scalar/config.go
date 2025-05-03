@@ -48,7 +48,7 @@ type Config struct {
 	ProxyUrl string
 
 	// Raw Space Url
-	// Optional. Default: /doc.json
+	// Optional. Default: doc.json
 	RawSpecUrl string
 }
 
