@@ -1,72 +1,143 @@
+---
+id: scalar
+title: Scalar
+---
+
 # Scalar
 
-## Usage
-1. Add the swagger comment following this [reference](https://github.com/swaggo/swag#declarative-comments-format)
-2. Download Swag command latest
-```bash
-go install github.com/swaggo/swag/v2/cmd/swag@v2.0.0-rc4
+Scalar middleware for [Fiber](https://github.com/gofiber/fiber). The middleware handles Scalar UI.
+
+**Note: Requires Go 1.23.0 and above**
+
+### Table of Contents
+- [Signatures](#signatures)
+- [Installation](#installation)
+- [Examples](#examples)
+- [Config](#config)
+- [Default Config](#default-config)
+
+### Signatures
+```go
+func New(config ...scalar.Config) fiber.Handler
 ```
-3. Use Swag command from 2. to generate the openAPI 3.1 docs
+
+### Installation
+Scalar is tested on the latest [Go versions](https://golang.org/dl/) with support for modules. So make sure to initialize one first if you didn't do that yet:
 ```bash
-swag init -v3.1 -o docs -g main.go --parseDependency --parseInternal
+go mod init github.com/<user>/<repo>
 ```
-4. Download Scalar UI package
+And then install the Scalar middleware:
 ```bash
 go get github.com/yokeTH/go-pkg/scalar
 ```
-And use as the fiber handler to your project
+
+### Examples
+Import the middleware package
 ```go
-package main
-
 import (
-	"github.com/gofiber/fiber/v2"
-	"github.com/yokeTH/go-pkg/scalar"
+  "github.com/gofiber/fiber/v2"
+  "github.com/yokeTH/go-pkg/scalar"
 )
-
-//	@title Scalar Example
-//	@version 1.0
-//	@servers https http
-func main() {
-	app := fiber.New()
-
-	app.Get("/swagger/*", scalar.HandlerDefault)
-
-	app.Get("/swagger/*", scalar.New(scalar.Config{
-		// if your generate docs output path is not docs
-		DocsJsonPath: "./doc/swagger.json",
-	}))
-
-	app.Listen(":8080")
-}
 ```
 
-## Config
+Using swaggo to generate documents default output path is `(root)/docs`:
+```bash
+swag init -v3.1
+```
+
+Using the default config:
+```go
+app.Use(scalar.New())
+```
+
+Using a custom config:
+```go
+cfg := scalar.Config{
+    BasePath: "/",
+    FilePath: "./docs/swagger.json",
+    Path:     "swagger", // replace original swagger path
+    Title:    "Your app API Docs",
+}
+
+app.Use(scalar.New(cfg))
+```
+
+Use program data for Swagger content:
+```go
+cfg := scalar.Config{
+    BasePath:    "/",
+    FilePath:    "./docs/swagger.json",
+    FileContent: mySwaggerByteSlice,
+    Path:        "swagger",
+    Title:       "Swagger API Docs",
+}
+
+app.Use(scalar.New(cfg))
+```
+
+### Config
 ```go
 type Config struct {
-	// Title tag of html scalar
-	// default: "Scalar API Reference"
+	// Next defines a function to skip this middleware when returned true.
+	//
+	// Optional. Default: nil
+	Next func(c *fiber.Ctx) bool
+
+	// BasePath for the UI path
+	//
+	// Optional. Default: /
+	BasePath string
+
+	// FilePath for the swagger.json or swagger.yaml file
+	//
+	// Optional. Default: ./docs/swagger.json
+	FilePath string
+
+	// FileContent for the content of the swagger.json or swagger.yaml file.
+	//
+	// Optional. Default: nil
+	FileContent []byte
+
+	// FileContent for the content of the swagger.json or swagger.yaml file.
+	//
+	// Optional. Default: nil
+	FileContentString string
+
+	// Path combines with BasePath for the full UI path
+	//
+	// Optional. Default: docs
+	Path string
+
+	// Title for the documentation site
+	//
+	// Optional. Default: Fiber API documentation
 	Title string
 
-	// Json string of OPEN API
-	// default: ""
-	DocsJsonContent string
-
-	// Url of json content
-	// example: app.Get("/swagger/*", scalar.HandlerDefault) -> /swagger/doc.json will serve the json of openAPI
-	// default: "doc.json"
-	DocsJsonUrl string
-
-	// Path of generated docs
-	// default: "./docs/swagger.json"
-	DocsJsonPath string
+	// CacheAge defines the max-age for the Cache-Control header in seconds.
+	//
+	// Optional. Default: 1 min (no cache)
+	CacheAge int
 
 	// Custom Scalar Style
 	// Ref: https://github.com/scalar/scalar/blob/main/packages/themes/src/variables.css
-	// default: ""
+	// Optional. Default: ""
 	CustomStyle template.CSS
 
 	// Proxy to avoid CORS issues
-	// default: "https://proxy.scalar.com"
+	// Optional. Default: "https://proxy.scalar.com"
 	ProxyUrl string
+}
+```
+
+### Default Config
+```go
+var ConfigDefault = Config{
+	Next:     nil,
+	BasePath: "/",
+	FilePath: "./docs/swagger.json",
+	Path:     "docs",
+	Title:    "Fiber API documentation",
+	CacheAge: 60,
+	ProxyUrl: "https://proxy.scalar.com",
 }
 ```
