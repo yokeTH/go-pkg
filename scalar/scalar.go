@@ -1,99 +1,53 @@
 package scalar
 
 import (
-	_ "embed"
 	"fmt"
-	"path"
-	"text/template"
+	"html/template"
+	"os"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/swaggo/swag"
 )
 
-//go:embed scalar.min.js
-var embeddedJS []byte
+var DefaultHandler = New()
 
 func New(config ...Config) fiber.Handler {
-	// Set default config
-	cfg := ConfigDefault
-
-	// Override config if provided
-	if len(config) > 0 {
-		cfg = config[0]
-
-		// Set default values
-		if len(cfg.BasePath) == 0 {
-			cfg.BasePath = ConfigDefault.BasePath
-		}
-		if len(cfg.Path) == 0 {
-			cfg.Path = ConfigDefault.Path
-		}
-		if len(cfg.Title) == 0 {
-			cfg.Title = ConfigDefault.Title
-		}
-		if len(cfg.ProxyUrl) == 0 {
-			cfg.ProxyUrl = ConfigDefault.ProxyUrl
-		}
-		if len(cfg.RawSpecUrl) == 0 {
-			cfg.RawSpecUrl = ConfigDefault.RawSpecUrl
-		}
+	var cfg Config = defaultConfig
+	if len(config) > 1 {
+		cfg = loadDefaultConfig(config[0])
 	}
+	var (
+		setupErr error
+	)
 
-	rawSpec := cfg.FileContentString
-	if len(rawSpec) == 0 {
-		doc, err := swag.ReadDoc()
-		if err != nil {
-			panic(err)
-		}
-		rawSpec = doc
-	}
-
-	cfg.FileContentString = string(rawSpec)
-
-	scalarUIPath := path.Join(cfg.BasePath, cfg.Path)
-	specURL := path.Join(scalarUIPath, cfg.RawSpecUrl)
-	jsFallbackPath := path.Join(scalarUIPath, "/js/api-reference.min.js")
-
-	html, err := template.New("index.html").Parse(templateHTML)
+	html, err := template.New("index.html").Parse(templeteHTML)
 	if err != nil {
-		panic(fmt.Errorf("Failed to parse html template:%v", err))
+		setupErr = fmt.Errorf("Failed to parse html template:%v", err)
 	}
 
-	htmlData := struct {
-		Config
-		Extra map[string]any
-	}{
-		Config: cfg,
-		Extra:  map[string]any{},
-	}
+	if cfg.DocsJsonContent == "" {
+		_, err = os.Stat(cfg.DocsJsonPath)
+		if os.IsNotExist(err) {
+			setupErr = fmt.Errorf("%s file does not exist", cfg.DocsJsonPath)
+		}
 
-	htmlData.Extra["FallbackUrl"] = jsFallbackPath
+		rawSpec, err := os.ReadFile(cfg.DocsJsonPath)
+		if err != nil {
+			setupErr = fmt.Errorf("Failed to read provided Swagger file (%s): %v", cfg.DocsJsonPath, err.Error())
+		}
+		cfg.DocsJsonContent = string(rawSpec)
+	}
 
 	return func(ctx *fiber.Ctx) error {
-		if cfg.Next != nil && cfg.Next(ctx) {
-			return ctx.Next()
+		if setupErr != nil {
+			return setupErr
 		}
 
-		// fallback js
-		if ctx.Path() == jsFallbackPath {
-			return ctx.Send(embeddedJS)
-		}
-
-		if cfg.CacheAge > 0 {
-			ctx.Set("Cache-Control", fmt.Sprintf("public, max-age=%d", cfg.CacheAge))
-		} else {
-			ctx.Set("Cache-Control", "no-store")
-		}
-
-		if ctx.Path() == specURL {
-			return ctx.JSON(rawSpec)
-		}
-
-		if !(ctx.Path() == scalarUIPath || ctx.Path() == specURL) {
-			return ctx.Next()
+		if strings.HasSuffix(ctx.Path(), cfg.DocsJsonUrl) {
+			return ctx.Type("json").SendString(cfg.DocsJsonContent)
 		}
 
 		ctx.Type("html")
-		return html.Execute(ctx, htmlData)
+		return html.Execute(ctx, cfg)
 	}
 }

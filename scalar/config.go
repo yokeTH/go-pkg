@@ -1,63 +1,60 @@
 package scalar
 
-import (
-	"html/template"
+import "html/template"
 
-	"github.com/gofiber/fiber/v2"
-)
-
-// Config defines the config for middleware.
 type Config struct {
-	// Next defines a function to skip this middleware when returned true.
-	//
-	// Optional. Default: nil
-	Next func(c *fiber.Ctx) bool
-
-	// BasePath for the UI path
-	//
-	// Optional. Default: /
-	BasePath string
-
-	// FileContent for the content of the swagger.json or swagger.yaml file.
-	//
-	// Optional. Default: nil
-	FileContentString string
-
-	// Path combines with BasePath for the full UI path
-	//
-	// Optional. Default: docs
-	Path string
-
-	// Title for the documentation site
-	//
-	// Optional. Default: Fiber API documentation
+	// Title tag of html scalar
+	// default: "Scalar API Reference"
 	Title string
 
-	// CacheAge defines the max-age for the Cache-Control header in seconds.
-	//
-	// Optional. Default: 1 min (no cache)
-	CacheAge int
+	// Json string of OPEN API
+	// default: ""
+	DocsJsonContent string
+
+	// Url of json content
+	// example: app.Get("/swagger/*", scalar.HandlerDefault) -> /swagger/doc.json will serve the json of openAPI
+	// default: "doc.json"
+	DocsJsonUrl string
+
+	// Path of generated docs
+	// default: "./docs/swagger.json"
+	DocsJsonPath string
 
 	// Custom Scalar Style
 	// Ref: https://github.com/scalar/scalar/blob/main/packages/themes/src/variables.css
-	// Optional. Default: ""
+	// default: ""
 	CustomStyle template.CSS
 
 	// Proxy to avoid CORS issues
-	// Optional. Default: "https://proxy.scalar.com"
+	// default: "https://proxy.scalar.com"
 	ProxyUrl string
-
-	// Raw Space Url
-	// Optional. Default: doc.json
-	RawSpecUrl string
 }
 
-var ConfigDefault = Config{
-	Next:       nil,
-	BasePath:   "/",
-	Path:       "docs",
-	Title:      "Fiber API documentation",
-	CacheAge:   60,
-	ProxyUrl:   "https://proxy.scalar.com",
-	RawSpecUrl: "doc.json",
+var defaultConfig = Config{
+	Title:        "Scalar API Reference",
+	DocsJsonUrl:  "doc.json",
+	DocsJsonPath: "./docs/swagger.json",
+	ProxyUrl:     "https://proxy.scalar.com",
+}
+
+func loadDefaultConfig(config Config) Config {
+	var cfg Config = defaultConfig
+
+	if config.Title != "" {
+		cfg.Title = config.Title
+	}
+
+	if config.DocsJsonUrl != "" {
+		cfg.DocsJsonUrl = config.DocsJsonPath
+	}
+
+	if config.DocsJsonPath != "" {
+		cfg.DocsJsonPath = config.DocsJsonPath
+	}
+
+	if config.ProxyUrl != "" {
+		cfg.ProxyUrl = config.ProxyUrl
+	}
+
+	return cfg
 }
