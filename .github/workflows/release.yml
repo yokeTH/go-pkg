@@ -58,4 +58,5 @@ jobs:
       - name: Use dynamic release-drafter configuration
         uses: release-drafter/release-drafter@v6
         with:
+          config-name: release-drafter-template.yml
           config: ${{ steps.generate-config.outputs.config }}
