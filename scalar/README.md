@@ -30,7 +30,7 @@ And then install the Scalar middleware:
 ```bash
 go get github.com/yokeTH/go-pkg/scalar
 ```
-> 💡 **Tip**: You can use with fiber v3 `go get github.com/yokeTH/go-pkg/scalar@v1.2.0-fiber3`
+> 💡 **Tip**: You can use with fiber v3 `go get github.com/yokeTH/go-pkg/scalar@v1.2.1-fiber3`
 
 ### Examples
 Using swaggo to generate documents default output path is `(root)/docs`:
