@@ -30,6 +30,7 @@ And then install the Scalar middleware:
 ```bash
 go get github.com/yokeTH/go-pkg/scalar
 ```
+> 💡 **Tip**: You can use with fiber v3 `go get github.com/yokeTH/go-pkg/scalar@v1.2.0-fiber3`
 
 ### Examples
 Using swaggo to generate documents default output path is `(root)/docs`:
@@ -37,7 +38,7 @@ Using swaggo to generate documents default output path is `(root)/docs`:
 swag init -v3.1
 ```
 
-Import the middleware package
+Import the middleware package and generated docs
 ```go
 import (
   "YOUR_MODULE/docs"
@@ -47,12 +48,24 @@ import (
 )
 ```
 
+After Imported:
+Register Swag the Docs
+```go
+swag.Register(docs.SwaggerInfo.InstanceName(), docs.SwaggerInfo)
+```
+
 Using the default config:
 ```go
-// Register swag
-swag.Register(docs.SwaggerInfo.InstanceName(), docs.SwaggerInfo)
-
 app.Use(scalar.New())
+```
+Now you can access scalar API documentation UI at `{HOSTNAME}/docs` and JSON documentation at `{HOSTNAME}/docs/doc.json`. Additionally, you can modify the path by configuring the middleware to suit your application's requirements.
+
+Using as the handler:
+
+```go
+app.Get("/yourpath/*", scalar.New(scalar.Config{
+	Path:     "/yourpath",
+}))
 ```
 
 Using a custom config:
@@ -128,7 +141,7 @@ type Config struct {
 
 ### Default Config
 ```go
-var ConfigDefault = Config{
+var configDefault = Config{
 	Next:       nil,
 	BasePath:   "/",
 	Path:       "docs",
