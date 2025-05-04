@@ -15,7 +15,7 @@ var embeddedJS []byte
 
 func New(config ...Config) fiber.Handler {
 	// Set default config
-	cfg := ConfigDefault
+	cfg := configDefault
 
 	// Override config if provided
 	if len(config) > 0 {
@@ -23,19 +23,19 @@ func New(config ...Config) fiber.Handler {
 
 		// Set default values
 		if len(cfg.BasePath) == 0 {
-			cfg.BasePath = ConfigDefault.BasePath
+			cfg.BasePath = configDefault.BasePath
 		}
 		if len(cfg.Path) == 0 {
-			cfg.Path = ConfigDefault.Path
+			cfg.Path = configDefault.Path
 		}
 		if len(cfg.Title) == 0 {
-			cfg.Title = ConfigDefault.Title
+			cfg.Title = configDefault.Title
 		}
 		if len(cfg.ProxyUrl) == 0 {
-			cfg.ProxyUrl = ConfigDefault.ProxyUrl
+			cfg.ProxyUrl = configDefault.ProxyUrl
 		}
 		if len(cfg.RawSpecUrl) == 0 {
-			cfg.RawSpecUrl = ConfigDefault.RawSpecUrl
+			cfg.RawSpecUrl = configDefault.RawSpecUrl
 		}
 	}
 
@@ -86,7 +86,8 @@ func New(config ...Config) fiber.Handler {
 		}
 
 		if ctx.Path() == specURL {
-			return ctx.JSON(rawSpec)
+			ctx.Set("Content-Type", "application/json")
+			return ctx.SendString(rawSpec)
 		}
 
 		if !(ctx.Path() == scalarUIPath || ctx.Path() == specURL) {

@@ -52,7 +52,7 @@ type Config struct {
 	RawSpecUrl string
 }
 
-var ConfigDefault = Config{
+var configDefault = Config{
 	Next:       nil,
 	BasePath:   "/",
 	Path:       "docs",
