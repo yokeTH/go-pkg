@@ -1,4 +1,4 @@
-module github.com/yokeTH/go-pkg/scalar
+module github.com/yokeTH/go-pkg/scalar/v3
 
 go 1.23.0
 
