@@ -36,7 +36,10 @@ jobs:
     needs: changes
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    if: needs.changes.outputs.packages != '[]' # Ensure job runs only if there are changes
+    if: needs.changes.outputs.packages != '[]'
+    permissions:
+      contents: write
+      pull-requests: read
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     strategy:
