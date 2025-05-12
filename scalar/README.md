@@ -1,9 +1,9 @@
----
-id: scalar
-title: Scalar
----
+> [!NOTE]  
+> Deprecated move to https://github.com/yokeTH/gofiber-scalar
+> because maintain ability and isolation 
 
-# Scalar
+
+# Scalar 
 
 Scalar middleware for [Fiber](https://github.com/gofiber/fiber). The middleware handles Scalar UI.
 
